@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold">Servers</h2>
+            <p class="text-gray-400 mt-1">Manage llama-server instances</p>
+        </div>
+        <button onclick="openCreateServerModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium transition-colors">
+            + New Server
+        </button>
+    </div>
+
+    <div class="grid gap-4" id="servers-list">
+        <div class="text-center text-gray-500 py-8">Loading...</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showDeleteServerModal(id) {
+    const content = `
+        <div class="space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m5.75 4.25v-2.5h4.5v2.5m-6.5 1v9h8.5v-9m-9.5-.5h10.5"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold">Delete Server?</h3>
+                    <p class="text-sm text-gray-400 mt-0.5">Models assigned to this server will be unassigned. This cannot be undone.</p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-400 hover:text-white">Cancel</button>
+                <button id="confirm-delete-server-btn" class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-medium transition-colors">
+                    Delete
+                </button>
+            </div>
+        </div>
+    `;
+    showModal(content);
+    setTimeout(() => {
+        const btn = document.getElementById('confirm-delete-server-btn');
+        if (btn) {
+            btn.addEventListener('click', async () => {
+                closeModal();
+                const ok = await apiFetch(`/api/servers/${id}`, { method: 'DELETE' });
+                if (ok !== null) {
+                    loadServers();
+                    showToast('Server deleted', 'success');
+                }
+            });
+        }
+    }, 50);
+}
+
+function openCreateServerModal() {
+    const content = `
+        <div class="space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><rect x="1.75" y="3.25" width="12.5" height="10"/><line x1="2.25" y1="8.25" x2="13.75" y2="8.25"/><path d="m4.75 10.75v0m0-5v0m6.5 0h-3m3 5h-3"/></svg>
+                </div>
+                <h3 class="text-lg font-semibold">Add Server</h3>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-sm text-gray-400">Name</label>
+                    <input id="srv-name" type="text" placeholder="my-server" class="w-full mt-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="text-sm text-gray-400">URL</label>
+                    <input id="srv-url" type="text" placeholder="http://localhost:8080" class="w-full mt-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="text-sm text-gray-400">API Key (optional)</label>
+                    <input id="srv-key" type="password" placeholder="Key if server requires auth" class="w-full mt-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-400 hover:text-white">Cancel</button>
+                <button id="create-server-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium transition-colors">Add Server</button>
+            </div>
+        </div>
+    `;
+    showModal(content);
+    setTimeout(() => {
+        document.getElementById('srv-name')?.focus();
+        const btn = document.getElementById('create-server-btn');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                const name = document.getElementById('srv-name').value.trim();
+                const url = document.getElementById('srv-url').value.trim();
+                const apiKey = document.getElementById('srv-key').value.trim();
+                if (!name || !url) { showToast('Name and URL are required', 'error'); return; }
+                apiFetch('/api/servers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, url, api_key: apiKey })
+                }).then(ok => {
+                    if (ok !== null) {
+                        closeModal();
+                        loadServers();
+                        showToast('Server added', 'success');
+                    }
+                });
+            });
+        }
+    }, 50);
+}
+
+function openAddModelModal(serverId, serverName) {
+    const content = `
+        <div class="space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="M12.75 7.75h-10m5-5v10"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold">Assign Model</h3>
+                    <p class="text-sm text-gray-400 mt-0.5">Adding to <strong>${serverName}</strong></p>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-sm text-gray-400">Model Name</label>
+                    <input id="model-name" type="text" placeholder="qwen3-30b-a3b-instruct.gguf" class="w-full mt-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                    <input id="model-reassign" type="checkbox" class="rounded bg-gray-800 border-gray-700">
+                    Reassign from another server
+                </label>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-400 hover:text-white">Cancel</button>
+                <button id="assign-model-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium transition-colors">Assign</button>
+            </div>
+        </div>
+    `;
+    showModal(content);
+    setTimeout(() => {
+        document.getElementById('model-name')?.focus();
+        const btn = document.getElementById('assign-model-btn');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                const modelName = document.getElementById('model-name').value.trim();
+                const reassign = document.getElementById('model-reassign').checked;
+                if (!modelName) { showToast('Model name is required', 'error'); return; }
+                apiFetch(`/api/servers/${serverId}/models?reassign=${reassign}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model_name: modelName })
+                }).then(ok => {
+                    if (ok !== null) {
+                        closeModal();
+                        loadServers();
+                        showToast('Model assigned', 'success');
+                    }
+                });
+            });
+        }
+    }, 50);
+}
+
+function showRemoveModelModal(serverId, modelName) {
+    const content = `
+        <div class="space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m8 1.75v6.5m4.25-5s2 1.29822 2 4.75-2.79822 6.25-6.25 6.25-6.25-2.79822-6.25-6.25 2-4.75 2-4.75"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold">Remove Model?</h3>
+                    <p class="text-sm text-gray-400 mt-0.5">You are about to remove <strong>${modelName}</strong> from this server.</p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-400 hover:text-white">Cancel</button>
+                <button id="confirm-remove-model-btn" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 rounded-lg text-sm font-medium transition-colors">
+                    Remove
+                </button>
+            </div>
+        </div>
+    `;
+    showModal(content);
+    setTimeout(() => {
+        const btn = document.getElementById('confirm-remove-model-btn');
+        if (btn) {
+            btn.addEventListener('click', async () => {
+                closeModal();
+                const ok = await apiFetch(`/api/servers/${serverId}/models/${encodeURIComponent(modelName)}`, { method: 'DELETE' });
+                if (ok !== null) {
+                    loadServers();
+                    showToast('Model removed', 'success');
+                }
+            });
+        }
+    }, 50);
+}
+
+async function loadServers() {
+    const container = document.getElementById('servers-list');
+    const servers = await apiFetch('/api/servers');
+    if (servers === null) {
+        container.innerHTML = '<div class="text-center text-red-400 py-8">Failed to load servers</div>';
+        return;
+    }
+    if (!servers.length) {
+            container.innerHTML = '<div class="text-center text-gray-500 py-8">No servers yet. Add one to get started.</div>';
+            return;
+        }
+        container.innerHTML = servers.map(s => `
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 ${s.current ? 'border-blue-500/30' : ''}">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3">
+                            <h3 class="font-semibold">${s.name}</h3>
+                            <span class="text-xs text-gray-500 font-mono">${s.url}</span>
+                            ${s.api_key ? '<span class="text-xs text-gray-500">🔒 Auth</span>' : ''}
+                            ${s.current ? '<span class="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400">Current (configured in smol-llm-proxy)</span>' : ''}
+                        </div>
+                        <div class="mt-3">
+                            <p class="text-xs text-gray-500 mb-1">Models:</p>
+                            <div class="flex flex-wrap gap-2">
+                                ${(s.models || []).length ? (s.models || []).map(m => `
+                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-gray-800 rounded text-xs font-mono text-gray-300">
+                                        ${m}
+                                        <button onclick="showRemoveModelModal(${s.id}, '${m}')" class="text-gray-600 hover:text-red-400 ml-0.5">&times;</button>
+                                    </span>
+                                `).join('') : '<span class="text-xs text-gray-600">No models assigned</span>'}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 ml-4">
+                        <button onclick="openAddModelModal(${s.id}, '${s.name}')" class="p-2 text-gray-400 hover:text-white transition-colors" title="Add model">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="M12.75 7.75h-10m5-5v10"/></svg>
+                        </button>
+                        ${s.current ? '<span class="text-xs text-gray-500 flex items-center">Cannot delete current server</span>' : `<button onclick="showDeleteServerModal(${s.id})" class="p-2 text-gray-400 hover:text-red-400 transition-colors" title="Delete server">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m5.75 4.25v-2.5h4.5v2.5m-6.5 1v9h8.5v-9m-9.5-.5h10.5"/></svg>
+                        </button>`}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+}
+
+document.addEventListener('DOMContentLoaded', loadServers);
+</script>
+{% endblock %}

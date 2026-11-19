@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>smol-ui</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2.5V5.5'/><path d='M7.5 11C7.5 7.8 9.4 5.5 12 5.5C14.6 5.5 16.5 7.8 16.5 11C16.5 12.6 15.4 13.5 13.8 13.5H10.2C8.6 13.5 7.5 12.6 7.5 11Z'/><circle cx='10.4' cy='10.2' r='0.9' fill='currentColor' stroke='none'/><circle cx='13.6' cy='10.2' r='0.9' fill='currentColor' stroke='none'/><path d='M9.5 13.5C9.5 16.5 6 16.5 6 19.5'/><path d='M12 13.5V19.5'/><path d='M14.5 13.5C14.5 16.5 18 16.5 18 19.5'/><circle cx='6' cy='21' r='1.4' fill='currentColor' stroke='none'/><circle cx='12' cy='21' r='1.4' fill='currentColor' stroke='none'/><circle cx='18' cy='21' r='1.4' fill='currentColor' stroke='none'/></svg>">
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-56 bg-gray-900 border-r border-gray-800 flex flex-col">
+            <div class="p-4 border-b border-gray-800">
+                <h1 class="text-lg font-bold flex items-center gap-2">
+                    <svg class="w-6 h-6 text-emerald-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5V5.5"/><path d="M7.5 11C7.5 7.8 9.4 5.5 12 5.5C14.6 5.5 16.5 7.8 16.5 11C16.5 12.6 15.4 13.5 13.8 13.5H10.2C8.6 13.5 7.5 12.6 7.5 11Z"/><circle cx="10.4" cy="10.2" r="0.9" fill="currentColor" stroke="none"/><circle cx="13.6" cy="10.2" r="0.9" fill="currentColor" stroke="none"/><path d="M9.5 13.5C9.5 16.5 6 16.5 6 19.5"/><path d="M12 13.5V19.5"/><path d="M14.5 13.5C14.5 16.5 18 16.5 18 19.5"/><circle cx="6" cy="21" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="21" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="21" r="1.4" fill="currentColor" stroke="none"/></svg>
+                    <span>smol-ui</span>
+                </h1>
+                <p class="text-xs text-gray-500 mt-1">smol-llm-proxy Manager</p>
+            </div>
+            <nav class="flex-1 p-3 space-y-1">
+                <a href="/" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors" data-page="dashboard">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m3.75 5.75v7.5h8.5v-7.5m-10.5 1.5 6.25-5.5l6.25 5.5"/></svg>
+                    Dashboard
+                </a>
+                <a href="/keys" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors" data-page="keys">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m10 1.75c-2.34721 0-4.25 1.90279-4.25 4.25.00023.37267.04949.74369.14648 1.10352l-4.14648 4.14648v3h3v-1.5h1.5v-1.5h1.5l1.15039-1.15039c.35839.0980.72808.1486 1.09961.1504 2.3472 0 4.25-1.90279 4.25-4.25s-1.9028-4.25-4.25-4.25z"/><circle cx="10.75" cy="5.25" r="0.5" fill="currentColor"/></svg>
+                    API Keys
+                </a>
+                <a href="/servers" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors" data-page="servers">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><rect x="1.75" y="3.25" width="12.5" height="10"/><line x1="2.25" y1="8.25" x2="13.75" y2="8.25"/><path d="m4.75 10.75v0m0-5v0m6.5 0h-3m3 5h-3"/></svg>
+                    Servers
+                </a>
+                <a href="/aliases" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors" data-page="aliases">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m3.25 13.25h9m-8.5-6.5 4 3.5 4-3.5m-4-5v8.5"/></svg>
+                    Aliases
+                </a>
+                <a href="/usage" class="nav-link flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors" data-page="usage">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m2.75 10.25h9.5m-8.5-4.5h9.5m-2.5-4-1.5 12.5m-2.5-12.5-1.5 12.5"/></svg>
+                    Usage
+                </a>
+            </nav>
+            <div class="p-3 border-t border-gray-800">
+                <div id="proxy-status" class="flex items-center gap-2 text-xs text-gray-500">
+                    <span class="w-2 h-2 rounded-full bg-gray-600"></span>
+                    Checking...
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-auto">
+            <div class="p-6 max-w-6xl mx-auto">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <!-- Modal Overlay -->
+    <div id="modal-overlay" class="fixed inset-0 bg-black/60 z-40 hidden" onclick="closeModal()"></div>
+    <div id="modal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900 border border-gray-700 rounded-xl p-6 z-50 hidden w-full max-w-md shadow-2xl">
+        <div id="modal-content"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="/static/js/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

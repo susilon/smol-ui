@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold">API Keys</h2>
+            <p class="text-gray-400 mt-1">Manage user API keys</p>
+        </div>
+        <button onclick="openCreateKeyModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium transition-colors">
+            + New Key
+        </button>
+    </div>
+
+    <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <table class="w-full">
+            <thead>
+                <tr class="border-b border-gray-800 text-left text-xs text-gray-400 uppercase tracking-wider">
+                    <th class="px-5 py-3">Name</th>
+                    <th class="px-5 py-3">Status</th>
+                    <th class="px-5 py-3">RPM / TPM</th>
+                    <th class="px-5 py-3">Created</th>
+                    <th class="px-5 py-3 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="keys-table-body" class="text-sm">
+                <tr><td colspan="5" class="px-5 py-8 text-center text-gray-500">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyKey(key) {
+    navigator.clipboard.writeText(key);
+    showToast('Key copied to clipboard', 'success');
+}
+
+function showToggleKeyModal(id, currentActive, name) {
+    const action = currentActive ? 'deactivate' : 'activate';
+    const content = `
+        <div class="space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m8 1.75v6.5m4.25-5s2 1.29822 2 4.75-2.79822 6.25-6.25 6.25-6.25-2.79822-6.25-6.25 2-4.75 2-4.75"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold">${currentActive ? 'Deactivate' : 'Activate'} Key?</h3>
+                    <p class="text-sm text-gray-400 mt-0.5">You are about to ${action} <strong>${name || 'this key'}</strong></p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-400 hover:text-white">Cancel</button>
+                <button id="confirm-toggle-btn" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 rounded-lg text-sm font-medium transition-colors">
+                    ${currentActive ? 'Deactivate' : 'Activate'}
+                </button>
+            </div>
+        </div>
+    `;
+    showModal(content);
+    setTimeout(() => {
+        const btn = document.getElementById('confirm-toggle-btn');
+        if (btn) {
+            btn.addEventListener('click', async () => {
+                closeModal();
+                const ok = await apiFetch(`/api/keys/${id}/toggle`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ active: !currentActive })
+                });
+                if (ok !== null) {
+                    loadKeys();
+                    showToast(`Key ${currentActive ? 'deactivated' : 'activated'}`, 'success');
+                }
+            });
+        }
+    }, 50);
+}
+
+function showDeleteKeyModal(id, name) {
+    const content = `
+        <div class="space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m5.75 4.25v-2.5h4.5v2.5m-6.5 1v9h8.5v-9m-9.5-.5h10.5"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold">Delete API Key?</h3>
+                    <p class="text-sm text-gray-400 mt-0.5">You are about to delete <strong>${name || 'this key'}</strong>. This cannot be undone.</p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-400 hover:text-white">Cancel</button>
+                <button id="confirm-delete-btn" class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-medium transition-colors">
+                    Delete
+                </button>
+            </div>
+        </div>
+    `;
+    showModal(content);
+    setTimeout(() => {
+        const btn = document.getElementById('confirm-delete-btn');
+        if (btn) {
+            btn.addEventListener('click', async () => {
+                closeModal();
+                const ok = await apiFetch(`/api/keys/${id}`, { method: 'DELETE' });
+                if (ok !== null) {
+                    loadKeys();
+                    showToast('Key deleted', 'success');
+                }
+            });
+        }
+    }, 50);
+}
+
+function openCreateKeyModal(preFillName) {
+    const nameAttr = preFillName ? `value="${preFillName}"` : '';
+    const content = `
+        <div class="space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m10 1.75c-2.34721 0-4.25 1.90279-4.25 4.25.00023.37267.04949.74369.14648 1.10352l-4.14648 4.14648v3h3v-1.5h1.5v-1.5h1.5l1.15039-1.15039c.35839.0980.72808.1486 1.09961.1504 2.3472 0 4.25-1.90279 4.25-4.25s-1.9028-4.25-4.25-4.25z"/><circle cx="10.75" cy="5.25" r="0.5" fill="currentColor"/></svg>
+                </div>
+                <h3 class="text-lg font-semibold">Create API Key</h3>
+            </div>
+            <div>
+                <label class="text-sm text-gray-400">Key Name</label>
+                <input id="new-key-name" type="text" placeholder="User name (e.g., john)" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" ${nameAttr}>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-400 hover:text-white">Cancel</button>
+                <button id="create-key-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium transition-colors">Create</button>
+            </div>
+        </div>
+    `;
+    showModal(content);
+    setTimeout(() => {
+        const input = document.getElementById('new-key-name');
+        if (input) {
+            input.focus();
+            if (preFillName) input.select();
+        }
+        const btn = document.getElementById('create-key-btn');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                const name = document.getElementById('new-key-name').value.trim();
+                if (!name) { showToast('Name is required', 'error'); return; }
+                apiFetch('/api/keys', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                }).then(data => {
+                    if (data !== null) {
+                        loadKeys();
+                        const key = data.key || data.api_key || data.secret;
+                        if (key) {
+                            showKeyCreatedModal(key);
+                        } else {
+                            showToast('Key created', 'success');
+                        }
+                    }
+                });
+            });
+        }
+    }, 50);
+}
+
+let _pendingKeyCopy = null;
+
+function showKeyCreatedModal(key) {
+    _pendingKeyCopy = key;
+    const content = `
+        <div class="space-y-4">
+            <div>
+                <h3 class="text-lg font-semibold">API Key Created</h3>
+                <p class="text-sm text-gray-400 mt-1">Your new API key is below. Make sure to copy it now.</p>
+            </div>
+            <div class="bg-gray-800 border border-gray-700 rounded-lg p-3">
+                <code class="text-sm text-emerald-400 break-all font-mono">${key}</code>
+            </div>
+            <div class="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m8 1.75v6.5m4.25-5s2 1.29822 2 4.75-2.79822 6.25-6.25 6.25-6.25-2.79822-6.25-6.25 2-4.75 2-4.75"/></svg>
+                <p class="text-sm text-amber-400">This key will never be shown again. Save it somewhere safe now.</p>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-400 hover:text-white">Close</button>
+                <button id="copy-new-key-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium transition-colors">
+                    Copy Key
+                </button>
+            </div>
+        </div>
+    `;
+    showModal(content);
+    setTimeout(() => {
+        const btn = document.getElementById('copy-new-key-btn');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                if (_pendingKeyCopy) {
+                    copyKey(_pendingKeyCopy);
+                }
+            });
+        }
+    }, 50);
+}
+
+function showRegenerateKeyModal(id, name) {
+    const content = `
+        <div class="space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m4.75 10.75h-3m12.5-2c0 3-2.79822 5.5-6.25 5.5-3.75 0-6.25-3.5-6.25-3.5v3.5m9.5-9h3m-12.5 2c0-3 2.79822-5.5 6.25-5.5 3.75 0 6.25 3.5 6.25 3.5v-3.5"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold">Regenerate Key?</h3>
+                    <p class="text-sm text-gray-400 mt-0.5">This will delete <strong>${name}</strong> and create a new key with the same name. The old key will stop working immediately.</p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-400 hover:text-white">Cancel</button>
+                <button id="confirm-regenerate-btn" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 rounded-lg text-sm font-medium transition-colors">
+                    Regenerate
+                </button>
+            </div>
+        </div>
+    `;
+    showModal(content);
+    setTimeout(() => {
+        const btn = document.getElementById('confirm-regenerate-btn');
+        if (btn) {
+            btn.addEventListener('click', async () => {
+                closeModal();
+                const ok = await apiFetch(`/api/keys/${id}`, { method: 'DELETE' });
+                if (ok !== null) {
+                    showToast('Old key deleted, creating new key...', 'info');
+                    setTimeout(() => {
+                        openCreateKeyModal(name);
+                    }, 500);
+                }
+            });
+        }
+    }, 50);
+}
+
+function openLimitsModal(key) {
+    showModal(`
+        <h3 class="text-lg font-semibold mb-4">Rate Limits</h3>
+        <div class="space-y-3">
+            <div>
+                <label class="text-sm text-gray-400">RPM (requests/min)</label>
+                <input id="limit-rpm" type="number" value="${key.rpm_limit || 100}" class="w-full mt-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div>
+                <label class="text-sm text-gray-400">TPM (tokens/min)</label>
+                <input id="limit-tpm" type="number" value="${key.tpm_limit || 50000}" class="w-full mt-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+        </div>
+        <div class="flex justify-end gap-2 mt-4">
+            <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-400 hover:text-white">Cancel</button>
+            <button onclick="updateLimits(${key.id})" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium">Save</button>
+        </div>
+    `);
+}
+
+async function updateLimits(id) {
+    const rpm = parseInt(document.getElementById('limit-rpm').value);
+    const tpm = parseInt(document.getElementById('limit-tpm').value);
+    const ok = await apiFetch(`/api/keys/${id}/limits`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rpm_limit: rpm, tpm_limit: tpm })
+    });
+    if (ok !== null) {
+        closeModal();
+        loadKeys();
+        showToast('Limits updated', 'success');
+    }
+}
+
+async function loadKeys() {
+    const tbody = document.getElementById('keys-table-body');
+    const keys = await apiFetch('/api/keys');
+    if (keys === null) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-8 text-center text-red-400">Failed to load keys</td></tr>';
+        return;
+    }
+    if (!keys.length) {
+            tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-8 text-center text-gray-500">No keys yet. Create one to get started.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = keys.map(k => `
+            <tr class="border-b border-gray-800/50 hover:bg-gray-800/30">
+                <td class="px-5 py-3 font-medium">${k.name || '-'}</td>
+                <td class="px-5 py-3">
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${k.active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-700 text-gray-400'}">
+                        <span class="w-1.5 h-1.5 rounded-full ${k.active ? 'bg-emerald-400' : 'bg-gray-500'}"></span>
+                        ${k.active ? 'Active' : 'Inactive'}
+                    </span>
+                </td>
+                <td class="px-5 py-3 text-gray-400 text-xs">${k.rpm_limit || 100} / ${k.tpm_limit || 50000}</td>
+                <td class="px-5 py-3 text-xs text-gray-500">${k.created_at ? new Date(k.created_at * 1000).toLocaleDateString() : '-'}</td>
+                <td class="px-5 py-3 text-right space-x-2">
+                    <button onclick='showToggleKeyModal(${k.id}, ${k.active}, ${JSON.stringify(k.name || '')})' class="text-sm text-gray-400 hover:text-white transition-colors" title="${k.active ? 'Deactivate' : 'Activate'}">
+                        ${k.active ? '<svg class="w-4 h-4 inline" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m8 1.75v6.5m4.25-5s2 1.29822 2 4.75-2.79822 6.25-6.25 6.25-6.25-2.79822-6.25-6.25 2-4.75 2-4.75"/></svg>' : '<svg class="w-4 h-4 inline" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><polyline points="2.75 8.75,6.25 12.25,13.25 4.75"/></svg>'}
+                    </button>
+                    <button onclick='showRegenerateKeyModal(${k.id}, ${JSON.stringify(k.name || '')})' class="text-sm text-gray-400 hover:text-white transition-colors" title="Regenerate">
+                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m4.75 10.75h-3m12.5-2c0 3-2.79822 5.5-6.25 5.5-3.75 0-6.25-3.5-6.25-3.5v3.5m9.5-9h3m-12.5 2c0-3 2.79822-5.5 6.25-5.5 3.75 0 6.25 3.5 6.25 3.5v-3.5"/></svg>
+                    </button>
+                    <button onclick='openLimitsModal(${JSON.stringify(k)})' class="text-sm text-gray-400 hover:text-white transition-colors" title="Edit limits">
+                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><circle cx="8" cy="8" r="1.75"/><path d="m6.75 1.75 -.5 1.5 -1.5 1 -2 -.5 -1 2 1.5 1.5 v1.5 l-1.5 1.5 1 2 2 -.5 1.5 1 .5 1.5 h2.5 l.5 -1.5 1.5 -1 2 .5 1 -2 -1.5 -1.5 v-1.5 l1.5 -1.5 -1 -2 -2 .5 -1.5 -1 -.5 -1.5 z"/></svg>
+                    </button>
+                    <button onclick='showDeleteKeyModal(${k.id}, ${JSON.stringify(k.name || '')})' class="text-sm text-red-400 hover:text-red-300 transition-colors" title="Delete">
+                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m5.75 4.25v-2.5h4.5v2.5m-6.5 1v9h8.5v-9m-9.5-.5h10.5"/></svg>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+}
+
+document.addEventListener('DOMContentLoaded', loadKeys);
+</script>
+{% endblock %}

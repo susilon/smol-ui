@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6">
+    <div>
+        <h2 class="text-2xl font-bold">Dashboard</h2>
+        <p class="text-gray-400 mt-1">Overview of your smol-llm-proxy</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-400">API Keys</p>
+                    <p id="stat-keys" class="text-3xl font-bold mt-1">-</p>
+                </div>
+                <div class="w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m10 1.75c-2.34721 0-4.25 1.90279-4.25 4.25.00023.37267.04949.74369.14648 1.10352l-4.14648 4.14648v3h3v-1.5h1.5v-1.5h1.5l1.15039-1.15039c.35839.0980.72808.1486 1.09961.1504 2.3472 0 4.25-1.90279 4.25-4.25s-1.9028-4.25-4.25-4.25z"/><circle cx="10.75" cy="5.25" r="0.5" fill="currentColor"/></svg>
+                </div>
+            </div>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-400">Servers</p>
+                    <p id="stat-servers" class="text-3xl font-bold mt-1">-</p>
+                </div>
+                <div class="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><rect x="1.75" y="3.25" width="12.5" height="10"/><line x1="2.25" y1="8.25" x2="13.75" y2="8.25"/><path d="m4.75 10.75v0m0-5v0m6.5 0h-3m3 5h-3"/></svg>
+                </div>
+            </div>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-400">Aliases</p>
+                    <p id="stat-aliases" class="text-3xl font-bold mt-1">-</p>
+                </div>
+                <div class="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m3.25 13.25h9m-8.5-6.5 4 3.5 4-3.5m-4-5v8.5"/></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Usage Chart -->
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <h3 class="text-sm font-semibold text-gray-300 mb-4">Usage (Last 100 Requests)</h3>
+        <div class="relative h-64">
+            <canvas id="dashboard-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <h3 class="font-semibold mb-4">Quick Actions</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <a href="/keys" class="flex items-center gap-3 p-3 rounded-lg bg-gray-800/50 hover:bg-gray-800 transition-colors">
+                <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="M12.75 7.75h-10m5-5v10"/></svg>
+                </div>
+                <div>
+                    <p class="font-medium text-sm">Create API Key</p>
+                    <p class="text-xs text-gray-400">Add a new user key</p>
+                </div>
+            </a>
+            <a href="/servers" class="flex items-center gap-3 p-3 rounded-lg bg-gray-800/50 hover:bg-gray-800 transition-colors">
+                <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><rect x="1.75" y="3.25" width="12.5" height="10"/><line x1="2.25" y1="8.25" x2="13.75" y2="8.25"/><path d="m4.75 10.75v0m0-5v0m6.5 0h-3m3 5h-3"/></svg>
+                </div>
+                <div>
+                    <p class="font-medium text-sm">Add Server</p>
+                    <p class="text-xs text-gray-400">Register a llama-server</p>
+                </div>
+            </a>
+            <a href="/aliases" class="flex items-center gap-3 p-3 rounded-lg bg-gray-800/50 hover:bg-gray-800 transition-colors">
+                <div class="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m3.25 13.25h9m-8.5-6.5 4 3.5 4-3.5m-4-5v8.5"/></svg>
+                </div>
+                <div>
+                    <p class="font-medium text-sm">Create Alias</p>
+                    <p class="text-xs text-gray-400">Map a short name to a model</p>
+                </div>
+            </a>
+            <a href="/usage" class="flex items-center gap-3 p-3 rounded-lg bg-gray-800/50 hover:bg-gray-800 transition-colors">
+                <div class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m2.75 10.25h9.5m-8.5-4.5h9.5m-2.5-4-1.5 12.5m-2.5-12.5-1.5 12.5"/></svg>
+                </div>
+                <div>
+                    <p class="font-medium text-sm">View Usage</p>
+                    <p class="text-xs text-gray-400">Token usage logs & stats</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let dashboardChartInstance = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadDashboardStats();
+    loadDashboardChart();
+});
+
+async function loadDashboardStats() {
+    const keys = await apiFetch('/api/keys') || [];
+    const servers = await apiFetch('/api/servers') || [];
+    const aliases = await apiFetch('/api/aliases') || [];
+    document.getElementById('stat-keys').textContent = keys.length || 0;
+    document.getElementById('stat-servers').textContent = servers.length || 0;
+    document.getElementById('stat-aliases').textContent = aliases.length || 0;
+}
+
+async function loadDashboardChart() {
+    const data = await apiFetch('/api/usage');
+    if (!data) return;
+    
+    const logs = (data.logs || []).filter(l => l.created_at);
+    if (!logs.length) {
+        return;
+    }
+
+    // Sort logs by time (oldest to newest) and limit to 100 most recent
+    const sortedLogs = logs.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)).slice(-100);
+
+    const labels = sortedLogs.map(l => {
+        const d = new Date(l.created_at.replace(' ', 'T'));
+        return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+    });
+    const promptData = sortedLogs.map(l => l.prompt_tokens || 0);
+    const completionData = sortedLogs.map(l => l.completion_tokens || 0);
+
+    const ctx = document.getElementById('dashboard-chart').getContext('2d');
+    
+    if (dashboardChartInstance) {
+        dashboardChartInstance.destroy();
+    }
+
+    dashboardChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Prompt Tokens',
+                    data: promptData,
+                    borderColor: 'rgb(251, 191, 36)',
+                    backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 0,
+                    pointHitRadius: 0,
+                    yAxisID: 'y-prompt'
+                },
+                {
+                    label: 'Completion Tokens',
+                    data: completionData,
+                    borderColor: 'rgb(52, 211, 153)',
+                    backgroundColor: 'rgba(52, 211, 153, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 0,
+                    pointHitRadius: 0,
+                    yAxisID: 'y-completion'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                    titleColor: '#f3f4f6',
+                    bodyColor: '#f3f4f6',
+                    borderColor: '#374151',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: true
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: 'rgba(55, 65, 81, 0.3)'
+                    },
+                    ticks: {
+                        color: '#9ca3af',
+                        font: { size: 10 },
+                        maxRotation: 45
+                    }
+                },
+                'y-prompt': {
+                    position: 'left',
+                    grid: {
+                        color: 'rgba(55, 65, 81, 0.3)'
+                    },
+                    ticks: {
+                        color: '#fbbf24',
+                        font: { size: 10 }
+                    },
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Prompt Tokens',
+                        color: '#fbbf24',
+                        font: { size: 11 }
+                    }
+                },
+                'y-completion': {
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    ticks: {
+                        color: '#34d399',
+                        font: { size: 10 }
+                    },
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Completion Tokens',
+                        color: '#34d399',
+                        font: { size: 11 }
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

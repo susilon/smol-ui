@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6">
+    <div>
+        <h2 class="text-2xl font-bold">Usage</h2>
+        <p class="text-gray-400 mt-1">Token usage logs and summaries, token details is limited to last 100 data.</p>
+    </div>
+
+    <!-- Chart -->
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <h3 class="text-sm font-semibold text-gray-300 mb-4">Usage Over Time</h3>
+        <div class="relative h-64">
+            <canvas id="usage-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div id="summary-cards" class="grid grid-cols-1 md:grid-cols-3 gap-4 hidden">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <p class="text-sm text-gray-400">Total Prompt Tokens</p>
+            <p id="sum-prompt" class="text-2xl font-bold mt-1 text-amber-400">-</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <p class="text-sm text-gray-400">Total Completion Tokens</p>
+            <p id="sum-completion" class="text-2xl font-bold mt-1 text-amber-400">-</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <p class="text-sm text-gray-400">Total Tokens</p>
+            <p id="sum-total" class="text-2xl font-bold mt-1 text-amber-400">-</p>
+        </div>
+    </div>
+
+    <!-- Summary Table -->
+    <div id="summary-section" class="hidden">
+        <h3 class="font-semibold mb-3">Usage by Model</h3>
+        <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-gray-800 text-left text-xs text-gray-400 uppercase tracking-wider">
+                        <th class="px-5 py-3">Model</th>
+                        <th class="px-5 py-3">Server</th>
+                        <th class="px-5 py-3 text-right">Prompt</th>
+                        <th class="px-5 py-3 text-right">Completion</th>
+                        <th class="px-5 py-3 text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody id="summary-table-body" class="text-sm"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <div class="flex flex-wrap gap-3 items-end">
+            <div>
+                <label class="text-xs text-gray-500 block mb-1">Key</label>
+                <select id="filter-key-select" class="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 w-48">
+                    <option value="">All keys</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 block mb-1">Server</label>
+                <select id="filter-server-select" class="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 w-48">
+                    <option value="">All servers</option>
+                </select>
+            </div>
+            <button onclick="currentPage=1; loadUsage(); loadSummary(); loadChart();" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 rounded-lg text-sm font-medium transition-colors">Filter</button>
+            <button onclick="loadSummary(); loadChart();" class="px-4 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition-colors">Summary</button>
+        </div>
+    </div>
+
+    <!-- Raw Logs -->
+    <div class="flex items-center justify-between mt-6 mb-2">
+        <h3 class="font-semibold">Usage Logs</h3>
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
+                <label class="text-sm text-gray-400">Rows per page:</label>
+                <select id="page-size-select" class="px-2 py-1 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+            <div id="pagination-info" class="text-sm text-gray-400"></div>
+        </div>
+    </div>
+    <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <table class="w-full">
+            <thead>
+                <tr class="border-b border-gray-800 text-left text-xs text-gray-400 uppercase tracking-wider">
+                    <th class="px-5 py-3">Time</th>
+                    <th class="px-5 py-3">Key</th>
+                    <th class="px-5 py-3">Server</th>
+                    <th class="px-5 py-3">Model</th>
+                    <th class="px-5 py-3 text-right">Prompt</th>
+                    <th class="px-5 py-3 text-right">Completion</th>
+                    <th class="px-5 py-3 text-right">Total</th>
+                    <th class="px-5 py-3 text-right">Time (ms)</th>
+                </tr>
+            </thead>
+            <tbody id="usage-table-body" class="text-sm">
+                <tr><td colspan="8" class="px-5 py-8 text-center text-gray-500">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <!-- Pagination Controls -->
+    <div id="pagination-controls" class="flex items-center justify-between mt-4">
+        <button id="prev-page-btn" onclick="changePage(-1)" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            Previous
+        </button>
+        <div id="page-info" class="text-sm text-gray-400">Page 1</div>
+        <button id="next-page-btn" onclick="changePage(1)" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            Next
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentPage = 1;
+let pageSize = parseInt(localStorage.getItem('usagePageSize')) || 10;
+let chartInstance = null;
+let allLogs = [];
+
+async function loadKeysDropdown() {
+    const select = document.getElementById('filter-key-select');
+    const keys = await apiFetch('/api/keys') || [];
+    select.innerHTML = '<option value="">All keys</option>' +
+        keys.map(k => `<option value="${k.id}">${k.name || 'key:' + k.id}</option>`).join('');
+}
+
+async function loadServersDropdown() {
+    const select = document.getElementById('filter-server-select');
+    const servers = await apiFetch('/api/servers') || [];
+    select.innerHTML = '<option value="">All servers</option>' +
+        servers.map(s => `<option value="${s.id}">${s.name || 'server:' + s.id}</option>`).join('');
+}
+
+function getFilterParams() {
+    const keyId = document.getElementById('filter-key-select').value;
+    const serverId = document.getElementById('filter-server-select').value;
+
+    const params = new URLSearchParams();
+    if (keyId) params.set('key_id', keyId);
+    if (serverId) params.set('server_id', serverId);
+    return { params };
+}
+
+async function fetchLogs() {
+    const { params } = getFilterParams();
+    const data = await apiFetch('/api/usage?' + params.toString());
+    if (!data) return false;
+    allLogs = data.logs || [];
+    return true;
+}
+
+async function loadSummary() {
+    const section = document.getElementById('summary-section');
+    const cards = document.getElementById('summary-cards');
+    const { params } = getFilterParams();
+
+    const data = await apiFetch('/api/usage/summary/real?' + params.toString());
+    if (data === null) return;
+    const tbody = document.getElementById('summary-table-body');
+
+    let totalPrompt = 0, totalCompletion = 0, totalAll = 0;
+    const rows = (data || []).map(r => {
+        totalPrompt += (r.total_prompt_tokens || 0);
+        totalCompletion += (r.total_completion_tokens || 0);
+        totalAll += (r.total_all_tokens || 0);
+        return `<tr class="border-b border-gray-800/50 hover:bg-gray-800/30">
+            <td class="px-5 py-3 font-mono text-xs">${r.real_model_name || '-'}</td>
+            <td class="px-5 py-3 text-xs">${r.server_id || '-'}</td>
+            <td class="px-5 py-3 text-right">${(r.total_prompt_tokens || 0).toLocaleString()}</td>
+            <td class="px-5 py-3 text-right">${(r.total_completion_tokens || 0).toLocaleString()}</td>
+            <td class="px-5 py-3 text-right font-semibold">${(r.total_all_tokens || 0).toLocaleString()}</td>
+        </tr>`;
+    }).join('');
+
+    tbody.innerHTML = rows || '<tr><td colspan="5" class="px-5 py-4 text-center text-gray-500">No data</td></tr>';
+    document.getElementById('sum-prompt').textContent = totalPrompt.toLocaleString();
+    document.getElementById('sum-completion').textContent = totalCompletion.toLocaleString();
+    document.getElementById('sum-total').textContent = totalAll.toLocaleString();
+    section.classList.remove('hidden');
+    cards.classList.remove('hidden');
+}
+
+async function loadUsage() {
+    const tbody = document.getElementById('usage-table-body');
+    tbody.innerHTML = '<tr><td colspan="8" class="px-5 py-8 text-center text-gray-500">Loading...</td></tr>';
+
+    const ok = await fetchLogs();
+    if (!ok) {
+        tbody.innerHTML = '<tr><td colspan="8" class="px-5 py-8 text-center text-red-400">Failed to load usage</td></tr>';
+        return;
+    }
+    
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    const logs = allLogs.slice(start, end);
+    const total = allLogs.length;
+    
+    if (!logs.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="px-5 py-8 text-center text-gray-500">No usage data</td></tr>';
+    } else {
+        tbody.innerHTML = logs.map(l => {
+            const time = l.created_at ? new Date(l.created_at.replace(' ', 'T')).toLocaleString() : '-';
+            return `<tr class="border-b border-gray-800/50 hover:bg-gray-800/30">
+                <td class="px-5 py-3 text-xs text-gray-400">${time}</td>
+                <td class="px-5 py-3 text-xs">${l.user_name || 'key:' + l.key_id || '-'}</td>
+                <td class="px-5 py-3 text-xs">${l.server_name || '-'}</td>
+                <td class="px-5 py-3 font-mono text-xs">${l.model_name || '-'}</td>
+                <td class="px-5 py-3 text-right">${(l.prompt_tokens || 0).toLocaleString()}</td>
+                <td class="px-5 py-3 text-right">${(l.completion_tokens || 0).toLocaleString()}</td>
+                <td class="px-5 py-3 text-right font-semibold">${(l.total_tokens || 0).toLocaleString()}</td>
+                <td class="px-5 py-3 text-right text-xs text-gray-400">${l.prompt_ms ? l.prompt_ms.toFixed(1) : '-'}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    // Update pagination
+    const totalPages = Math.ceil(total / pageSize) || 1;
+    const startItem = total > 0 ? start + 1 : 0;
+    const endItem = Math.min(start + pageSize, total);
+    document.getElementById('pagination-info').textContent = total > 0 ? `Showing ${startItem}-${endItem} of ${total}` : 'No data';
+    document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+    document.getElementById('prev-page-btn').disabled = currentPage <= 1;
+    document.getElementById('next-page-btn').disabled = currentPage >= totalPages;
+}
+
+function changePage(delta) {
+    currentPage += delta;
+    loadUsage();
+}
+
+async function loadChart() {
+    const { params } = getFilterParams();
+
+    const data = await apiFetch('/api/usage?' + params.toString());
+    if (!data) return;
+    const logs = data.logs || [];
+    if (!logs.length) return;
+    const sortedLogs = logs
+        .filter(l => l.created_at)
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+    const labels = sortedLogs.map(l => {
+        const d = new Date(l.created_at.replace(' ', 'T'));
+        return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+    });
+    const promptData = sortedLogs.map(l => l.prompt_tokens || 0);
+    const completionData = sortedLogs.map(l => l.completion_tokens || 0);
+    const totalData = sortedLogs.map(l => l.total_tokens || 0);
+
+    const ctx = document.getElementById('usage-chart').getContext('2d');
+    
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+
+    const datasets = [
+        {
+            label: 'Prompt Tokens',
+            data: promptData,
+            borderColor: 'rgb(251, 191, 36)',
+            backgroundColor: 'rgba(251, 191, 36, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 0,
+            pointHitRadius: 0,
+            yAxisID: 'y-prompt'
+        },
+        {
+            label: 'Completion Tokens',
+            data: completionData,
+            borderColor: 'rgb(52, 211, 153)',
+            backgroundColor: 'rgba(52, 211, 153, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 0,
+            pointHitRadius: 0,
+            yAxisID: 'y-completion'
+        }
+    ];
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        color: '#9ca3af',
+                        font: { size: 11 }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                    titleColor: '#f3f4f6',
+                    bodyColor: '#f3f4f6',
+                    borderColor: '#374151',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: true
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: 'rgba(55, 65, 81, 0.3)'
+                    },
+                    ticks: {
+                        color: '#9ca3af',
+                        font: { size: 10 },
+                        maxRotation: 45
+                    }
+                },
+                'y-prompt': {
+                    position: 'left',
+                    grid: {
+                        color: 'rgba(55, 65, 81, 0.3)'
+                    },
+                    ticks: {
+                        color: '#fbbf24',
+                        font: { size: 10 }
+                    },
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Prompt Tokens',
+                        color: '#fbbf24',
+                        font: { size: 11 }
+                    }
+                },
+                'y-completion': {
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    ticks: {
+                        color: '#34d399',
+                        font: { size: 10 }
+                    },
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Completion Tokens',
+                        color: '#34d399',
+                        font: { size: 11 }
+                    }
+                }
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Set page size selector
+    document.getElementById('page-size-select').value = String(pageSize);
+    
+    // Handle page size change
+    document.getElementById('page-size-select').addEventListener('change', (e) => {
+        pageSize = parseInt(e.target.value);
+        localStorage.setItem('usagePageSize', pageSize);
+        currentPage = 1;
+        loadUsage();
+        loadChart();
+    });
+
+    loadKeysDropdown();
+    loadServersDropdown();
+    loadUsage();
+    loadSummary();
+    loadChart();
+});
+</script>
+{% endblock %}

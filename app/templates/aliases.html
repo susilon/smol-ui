@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold">Aliases</h2>
+            <p class="text-gray-400 mt-1">Short names that map to model names</p>
+        </div>
+        <button onclick="openCreateAliasModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-medium transition-colors">
+            + New Alias
+        </button>
+    </div>
+
+    <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <table class="w-full">
+            <thead>
+                <tr class="border-b border-gray-800 text-left text-xs text-gray-400 uppercase tracking-wider">
+                    <th class="px-5 py-3">Alias</th>
+                    <th class="px-5 py-3">Model</th>
+                    <th class="px-5 py-3 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="aliases-table-body" class="text-sm">
+                <tr><td colspan="3" class="px-5 py-8 text-center text-gray-500">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showDeleteAliasModal(name) {
+    const content = `
+        <div class="space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m5.75 4.25v-2.5h4.5v2.5m-6.5 1v9h8.5v-9m-9.5-.5h10.5"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold">Delete Alias?</h3>
+                    <p class="text-sm text-gray-400 mt-0.5">You are about to delete <strong>${name}</strong>. This cannot be undone.</p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-400 hover:text-white">Cancel</button>
+                <button id="confirm-delete-alias-btn" class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-medium transition-colors">
+                    Delete
+                </button>
+            </div>
+        </div>
+    `;
+    showModal(content);
+    setTimeout(() => {
+        const btn = document.getElementById('confirm-delete-alias-btn');
+        if (btn) {
+            btn.addEventListener('click', async () => {
+                closeModal();
+                const ok = await apiFetch(`/api/aliases/${encodeURIComponent(name)}`, { method: 'DELETE' });
+                if (ok !== null) {
+                    loadAliases();
+                    showToast('Alias deleted', 'success');
+                }
+            });
+        }
+    }, 50);
+}
+
+function openCreateAliasModal() {
+    const content = `
+        <div class="space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m3.25 13.25h9m-8.5-6.5 4 3.5 4-3.5m-4-5v8.5"/></svg>
+                </div>
+                <h3 class="text-lg font-semibold">Create Alias</h3>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-sm text-gray-400">Alias Name</label>
+                    <input id="alias-name" type="text" placeholder="fast" class="w-full mt-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="text-sm text-gray-400">Model Name</label>
+                    <input id="alias-model" type="text" placeholder="qwen3-30b-a3b-instruct.gguf" class="w-full mt-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-400 hover:text-white">Cancel</button>
+                <button id="create-alias-btn" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-medium transition-colors">Create</button>
+            </div>
+        </div>
+    `;
+    showModal(content);
+    setTimeout(() => {
+        document.getElementById('alias-name')?.focus();
+        const btn = document.getElementById('create-alias-btn');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                const name = document.getElementById('alias-name').value.trim();
+                const realModel = document.getElementById('alias-model').value.trim();
+                if (!name || !realModel) { showToast('Name and model are required', 'error'); return; }
+                apiFetch('/api/aliases', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ alias_name: name, real_model_name: realModel })
+                }).then(ok => {
+                    if (ok !== null) {
+                        closeModal();
+                        loadAliases();
+                        showToast('Alias created', 'success');
+                    }
+                });
+            });
+        }
+    }, 50);
+}
+
+function openEditAliasModal(alias) {
+    const content = `
+        <div class="space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><polygon points="1.75 11.25,1.75 14.25,4.75 14.25,14.25 4.75,11.25 1.75"/><line x1="8.75" y1="4.75" x2="11.25" y2="7.25"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold">Edit Alias</h3>
+                    <p class="text-sm text-gray-400 mt-0.5">Updating <strong>${alias.alias_name}</strong></p>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-sm text-gray-400">Model Name</label>
+                    <input id="edit-alias-model" type="text" value="${alias.real_model_name}" class="w-full mt-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-400 hover:text-white">Cancel</button>
+                <button id="update-alias-btn" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-medium transition-colors">Update</button>
+            </div>
+        </div>
+    `;
+    showModal(content);
+    setTimeout(() => {
+        const btn = document.getElementById('update-alias-btn');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                const realModel = document.getElementById('edit-alias-model').value.trim();
+                if (!realModel) { showToast('Model name is required', 'error'); return; }
+                apiFetch(`/api/aliases/${encodeURIComponent(alias.alias_name)}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ real_model_name: realModel })
+                }).then(ok => {
+                    if (ok !== null) {
+                        closeModal();
+                        loadAliases();
+                        showToast('Alias updated', 'success');
+                    }
+                });
+            });
+        }
+    }, 50);
+}
+
+async function loadAliases() {
+    const tbody = document.getElementById('aliases-table-body');
+    const aliases = await apiFetch('/api/aliases');
+    if (aliases === null) {
+        tbody.innerHTML = '<tr><td colspan="3" class="px-5 py-8 text-center text-red-400">Failed to load aliases</td></tr>';
+        return;
+    }
+    if (!aliases.length) {
+            tbody.innerHTML = '<tr><td colspan="3" class="px-5 py-8 text-center text-gray-500">No aliases yet.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = aliases.map(a => `
+                <tr class="border-b border-gray-800/50 hover:bg-gray-800/30">
+                <td class="px-5 py-3 font-semibold text-purple-400">${a.alias_name}</td>
+                <td class="px-5 py-3 font-mono text-xs text-gray-400">${a.real_model_name}</td>
+                <td class="px-5 py-3 text-right space-x-2">
+                    <button onclick="openEditAliasModal(aliases.find(x => x.alias_name === '${a.alias_name}'))" class="text-sm text-gray-400 hover:text-white transition-colors" title="Edit">
+                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><polygon points="1.75 11.25,1.75 14.25,4.75 14.25,14.25 4.75,11.25 1.75"/><line x1="8.75" y1="4.75" x2="11.25" y2="7.25"/></svg>
+                    </button>
+                    <button onclick="showDeleteAliasModal('${a.alias_name}')" class="text-sm text-red-400 hover:text-red-300 transition-colors" title="Delete">
+                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m5.75 4.25v-2.5h4.5v2.5m-6.5 1v9h8.5v-9m-9.5-.5h10.5"/></svg>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+}
+
+document.addEventListener('DOMContentLoaded', loadAliases);
+</script>
+{% endblock %}
