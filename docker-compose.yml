@@ -2,11 +2,11 @@ services:
   smol-ui:
     build: .
     ports:
-      - "8080:8080"
+      - "${APP_PORT:-8080}:8080"
     env_file:
       - .env
     restart: unless-stopped
     environment:
       - SMOL_PROXY_URL=${SMOL_PROXY_URL}
       - ADMIN_KEY=${ADMIN_KEY}
-      - APP_PORT=8080
+      - APP_PORT=${APP_PORT:-8080}
