@@ -6,6 +6,8 @@ A lightweight web UI for managing [smol-llm-proxy](https://github.com/robolamp/s
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
+![smol-ui screenshot](./extras/image.png)
+
 ## Features
 
 - **Dashboard** — overview of keys, servers, and aliases at a glance
