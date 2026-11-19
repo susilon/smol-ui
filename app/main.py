@@ -180,18 +180,10 @@ async def api_delete_alias(alias_name: str):
 async def api_get_usage(
     key_id: Optional[int] = None,
     server_id: Optional[int] = None,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-    limit: int = 100,
-    offset: int = 0,
 ):
     params = {k: v for k, v in {
         "key_id": key_id,
         "server_id": server_id,
-        "start_date": start_date,
-        "end_date": end_date,
-        "limit": limit,
-        "offset": offset,
     }.items() if v is not None}
     return await proxy_request("GET", "/admin/usage", params=params)
 
@@ -200,13 +192,9 @@ async def api_get_usage(
 async def api_get_usage_summary(
     key_id: Optional[int] = None,
     server_id: Optional[int] = None,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
 ):
     params = {k: v for k, v in {
         "key_id": key_id,
         "server_id": server_id,
-        "start_date": start_date,
-        "end_date": end_date,
     }.items() if v is not None}
     return await proxy_request("GET", "/admin/usage/summary/real", params=params)

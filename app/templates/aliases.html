@@ -36,7 +36,7 @@ function showDeleteAliasModal(name) {
         <div class="space-y-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m5.75 4.25v-2.5h4.5v2.5m-6.5 1v9h8.5v-9m-9.5-.5h10.5"/></svg>
                 </div>
                 <div>
                     <h3 class="text-lg font-semibold">Delete Alias?</h3>
@@ -72,7 +72,7 @@ function openCreateAliasModal() {
         <div class="space-y-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m3.25 13.25h9m-8.5-6.5 4 3.5 4-3.5m-4-5v8.5"/></svg>
                 </div>
                 <h3 class="text-lg font-semibold">Create Alias</h3>
             </div>
@@ -104,7 +104,7 @@ function openCreateAliasModal() {
                 apiFetch('/api/aliases', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, real_model_name: realModel })
+                    body: JSON.stringify({ alias_name: name, real_model_name: realModel })
                 }).then(ok => {
                     if (ok !== null) {
                         closeModal();
@@ -122,7 +122,7 @@ function openEditAliasModal(alias) {
         <div class="space-y-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><polygon points="1.75 11.25,1.75 14.25,4.75 14.25,14.25 4.75,11.25 1.75"/><line x1="8.75" y1="4.75" x2="11.25" y2="7.25"/></svg>
                 </div>
                 <div>
                     <h3 class="text-lg font-semibold">Edit Alias</h3>
@@ -181,10 +181,10 @@ async function loadAliases() {
                 <td class="px-5 py-3 font-mono text-xs text-gray-400">${a.real_model_name}</td>
                 <td class="px-5 py-3 text-right space-x-2">
                     <button onclick="openEditAliasModal(aliases.find(x => x.alias_name === '${a.alias_name}'))" class="text-sm text-gray-400 hover:text-white transition-colors" title="Edit">
-                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><polygon points="1.75 11.25,1.75 14.25,4.75 14.25,14.25 4.75,11.25 1.75"/><line x1="8.75" y1="4.75" x2="11.25" y2="7.25"/></svg>
                     </button>
                     <button onclick="showDeleteAliasModal('${a.alias_name}')" class="text-sm text-red-400 hover:text-red-300 transition-colors" title="Delete">
-                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m5.75 4.25v-2.5h4.5v2.5m-6.5 1v9h8.5v-9m-9.5-.5h10.5"/></svg>
                     </button>
                 </td>
             </tr>

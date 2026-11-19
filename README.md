@@ -86,3 +86,9 @@ smol-ui exposes these API routes that forward to smol-llm-proxy:
 ## License
 
 MIT
+
+## Credits
+
+This project uses [Charm Icons](https://github.com/jaynewey/charm-icons) (MIT License) by jaynewey for UI icons.
+
+Icons used: `home`, `key`, `server`, `users`, `hash`, `cog`, `power`, `bin`, `plus`, `pencil`, `alert-circle`, `refresh`, `tick`, `cross`, `eye`, `calendar`, `menu`, `arrow-left`, `arrow-right`, `download-cloud`, `filter`, `play-circle`, `stop-circle`, `ellipsis`.

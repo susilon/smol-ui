@@ -44,7 +44,7 @@ function showToggleKeyModal(id, currentActive, name) {
         <div class="space-y-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m8 1.75v6.5m4.25-5s2 1.29822 2 4.75-2.79822 6.25-6.25 6.25-6.25-2.79822-6.25-6.25 2-4.75 2-4.75"/></svg>
                 </div>
                 <div>
                     <h3 class="text-lg font-semibold">${currentActive ? 'Deactivate' : 'Activate'} Key?</h3>
@@ -84,7 +84,7 @@ function showDeleteKeyModal(id, name) {
         <div class="space-y-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m5.75 4.25v-2.5h4.5v2.5m-6.5 1v9h8.5v-9m-9.5-.5h10.5"/></svg>
                 </div>
                 <div>
                     <h3 class="text-lg font-semibold">Delete API Key?</h3>
@@ -121,7 +121,7 @@ function openCreateKeyModal(preFillName) {
         <div class="space-y-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m10 1.75c-2.34721 0-4.25 1.90279-4.25 4.25.00023.37267.04949.74369.14648 1.10352l-4.14648 4.14648v3h3v-1.5h1.5v-1.5h1.5l1.15039-1.15039c.35839.0980.72808.1486 1.09961.1504 2.3472 0 4.25-1.90279 4.25-4.25s-1.9028-4.25-4.25-4.25z"/><circle cx="10.75" cy="5.25" r="0.5" fill="currentColor"/></svg>
                 </div>
                 <h3 class="text-lg font-semibold">Create API Key</h3>
             </div>
@@ -181,7 +181,7 @@ function showKeyCreatedModal(key) {
                 <code class="text-sm text-emerald-400 break-all font-mono">${key}</code>
             </div>
             <div class="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-                <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                <svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m8 1.75v6.5m4.25-5s2 1.29822 2 4.75-2.79822 6.25-6.25 6.25-6.25-2.79822-6.25-6.25 2-4.75 2-4.75"/></svg>
                 <p class="text-sm text-amber-400">This key will never be shown again. Save it somewhere safe now.</p>
             </div>
             <div class="flex justify-end gap-2">
@@ -210,7 +210,7 @@ function showRegenerateKeyModal(id, name) {
         <div class="space-y-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0A9 9 0 1116 12m0 0a9 9 0 01-11.418 0m15.356 2L20 13.5M4 13.5l2.582 2.5"/></svg>
+                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m4.75 10.75h-3m12.5-2c0 3-2.79822 5.5-6.25 5.5-3.75 0-6.25-3.5-6.25-3.5v3.5m9.5-9h3m-12.5 2c0-3 2.79822-5.5 6.25-5.5 3.75 0 6.25 3.5 6.25 3.5v-3.5"/></svg>
                 </div>
                 <div>
                     <h3 class="text-lg font-semibold">Regenerate Key?</h3>
@@ -301,17 +301,17 @@ async function loadKeys() {
                 <td class="px-5 py-3 text-gray-400 text-xs">${k.rpm_limit || 100} / ${k.tpm_limit || 50000}</td>
                 <td class="px-5 py-3 text-xs text-gray-500">${k.created_at ? new Date(k.created_at * 1000).toLocaleDateString() : '-'}</td>
                 <td class="px-5 py-3 text-right space-x-2">
-                    <button onclick="showToggleKeyModal(${k.id}, ${k.active}, ${JSON.stringify(k.name || '')})" class="text-sm text-gray-400 hover:text-white transition-colors" title="${k.active ? 'Deactivate' : 'Activate'}">
-                        ${k.active ? '<svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 3L4 14h7l-2 7 10-11h-7l2-7z"/></svg>' : '<svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'}
+                    <button onclick='showToggleKeyModal(${k.id}, ${k.active}, ${JSON.stringify(k.name || '')})' class="text-sm text-gray-400 hover:text-white transition-colors" title="${k.active ? 'Deactivate' : 'Activate'}">
+                        ${k.active ? '<svg class="w-4 h-4 inline" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m8 1.75v6.5m4.25-5s2 1.29822 2 4.75-2.79822 6.25-6.25 6.25-6.25-2.79822-6.25-6.25 2-4.75 2-4.75"/></svg>' : '<svg class="w-4 h-4 inline" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><polyline points="2.75 8.75,6.25 12.25,13.25 4.75"/></svg>'}
                     </button>
-                    <button onclick="showRegenerateKeyModal(${k.id}, ${JSON.stringify(k.name || '')})" class="text-sm text-gray-400 hover:text-white transition-colors" title="Regenerate">
-                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0A9 9 0 1116 12m0 0a9 9 0 01-11.418 0m15.356 2L20 13.5M4 13.5l2.582 2.5"/></svg>
+                    <button onclick='showRegenerateKeyModal(${k.id}, ${JSON.stringify(k.name || '')})' class="text-sm text-gray-400 hover:text-white transition-colors" title="Regenerate">
+                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m4.75 10.75h-3m12.5-2c0 3-2.79822 5.5-6.25 5.5-3.75 0-6.25-3.5-6.25-3.5v3.5m9.5-9h3m-12.5 2c0-3 2.79822-5.5 6.25-5.5 3.75 0 6.25 3.5 6.25 3.5v-3.5"/></svg>
                     </button>
                     <button onclick='openLimitsModal(${JSON.stringify(k)})' class="text-sm text-gray-400 hover:text-white transition-colors" title="Edit limits">
-                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><circle cx="8" cy="8" r="1.75"/><path d="m6.75 1.75 -.5 1.5 -1.5 1 -2 -.5 -1 2 1.5 1.5 v1.5 l-1.5 1.5 1 2 2 -.5 1.5 1 .5 1.5 h2.5 l.5 -1.5 1.5 -1 2 .5 1 -2 -1.5 -1.5 v-1.5 l1.5 -1.5 -1 -2 -2 .5 -1.5 -1 -.5 -1.5 z"/></svg>
                     </button>
-                    <button onclick="showDeleteKeyModal(${k.id}, ${JSON.stringify(k.name || '')})" class="text-sm text-red-400 hover:text-red-300 transition-colors" title="Delete">
-                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <button onclick='showDeleteKeyModal(${k.id}, ${JSON.stringify(k.name || '')})' class="text-sm text-red-400 hover:text-red-300 transition-colors" title="Delete">
+                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 16 16"><path d="m5.75 4.25v-2.5h4.5v2.5m-6.5 1v9h8.5v-9m-9.5-.5h10.5"/></svg>
                     </button>
                 </td>
             </tr>

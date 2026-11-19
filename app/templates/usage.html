@@ -4,35 +4,7 @@
 <div class="space-y-6">
     <div>
         <h2 class="text-2xl font-bold">Usage</h2>
-        <p class="text-gray-400 mt-1">Token usage logs and summaries</p>
-    </div>
-
-    <!-- Filters -->
-    <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
-        <div class="flex flex-wrap gap-3 items-end">
-            <div>
-                <label class="text-xs text-gray-500 block mb-1">Key</label>
-                <select id="filter-key-select" class="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 w-48">
-                    <option value="">All keys</option>
-                </select>
-            </div>
-            <div>
-                <label class="text-xs text-gray-500 block mb-1">Server</label>
-                <select id="filter-server-select" class="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 w-48">
-                    <option value="">All servers</option>
-                </select>
-            </div>
-            <div>
-                <label class="text-xs text-gray-500 block mb-1">From</label>
-                <input id="filter-start" type="date" class="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
-            </div>
-            <div>
-                <label class="text-xs text-gray-500 block mb-1">To</label>
-                <input id="filter-end" type="date" class="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
-            </div>
-            <button onclick="loadUsage(); loadSummary(); loadChart();" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 rounded-lg text-sm font-medium transition-colors">Filter</button>
-            <button onclick="loadSummary(); loadChart();" class="px-4 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition-colors">Summary</button>
-        </div>
+        <p class="text-gray-400 mt-1">Token usage logs and summaries, token details is limited to last 100 data.</p>
     </div>
 
     <!-- Chart -->
@@ -75,6 +47,26 @@
                 </thead>
                 <tbody id="summary-table-body" class="text-sm"></tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <div class="flex flex-wrap gap-3 items-end">
+            <div>
+                <label class="text-xs text-gray-500 block mb-1">Key</label>
+                <select id="filter-key-select" class="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 w-48">
+                    <option value="">All keys</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 block mb-1">Server</label>
+                <select id="filter-server-select" class="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 w-48">
+                    <option value="">All servers</option>
+                </select>
+            </div>
+            <button onclick="currentPage=1; loadUsage(); loadSummary(); loadChart();" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 rounded-lg text-sm font-medium transition-colors">Filter</button>
+            <button onclick="loadSummary(); loadChart();" class="px-4 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition-colors">Summary</button>
         </div>
     </div>
 
@@ -131,6 +123,7 @@
 let currentPage = 1;
 let pageSize = parseInt(localStorage.getItem('usagePageSize')) || 10;
 let chartInstance = null;
+let allLogs = [];
 
 async function loadKeysDropdown() {
     const select = document.getElementById('filter-key-select');
@@ -146,28 +139,22 @@ async function loadServersDropdown() {
         servers.map(s => `<option value="${s.id}">${s.name || 'server:' + s.id}</option>`).join('');
 }
 
-function getTodayDate() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
 function getFilterParams() {
     const keyId = document.getElementById('filter-key-select').value;
     const serverId = document.getElementById('filter-server-select').value;
-    const startDate = document.getElementById('filter-start').value;
-    const endDate = document.getElementById('filter-end').value;
 
     const params = new URLSearchParams();
-    params.set('limit', pageSize);
-    params.set('offset', (currentPage - 1) * pageSize);
     if (keyId) params.set('key_id', keyId);
     if (serverId) params.set('server_id', serverId);
-    if (startDate) params.set('start_date', startDate + 'T00:00:00');
-    if (endDate) params.set('end_date', endDate + 'T23:59:59');
-    return { params, keyId, serverId, startDate, endDate };
+    return { params };
+}
+
+async function fetchLogs() {
+    const { params } = getFilterParams();
+    const data = await apiFetch('/api/usage?' + params.toString());
+    if (!data) return false;
+    allLogs = data.logs || [];
+    return true;
 }
 
 async function loadSummary() {
@@ -203,18 +190,18 @@ async function loadSummary() {
 
 async function loadUsage() {
     const tbody = document.getElementById('usage-table-body');
-    const { params } = getFilterParams();
+    tbody.innerHTML = '<tr><td colspan="8" class="px-5 py-8 text-center text-gray-500">Loading...</td></tr>';
 
-    const data = await apiFetch('/api/usage?' + params.toString());
-    if (data === null) {
+    const ok = await fetchLogs();
+    if (!ok) {
         tbody.innerHTML = '<tr><td colspan="8" class="px-5 py-8 text-center text-red-400">Failed to load usage</td></tr>';
         return;
     }
-    const allLogs = data.logs || [];
-    const total = data.total || allLogs.length;
+    
     const start = (currentPage - 1) * pageSize;
     const end = start + pageSize;
     const logs = allLogs.slice(start, end);
+    const total = allLogs.length;
     
     if (!logs.length) {
         tbody.innerHTML = '<tr><td colspan="8" class="px-5 py-8 text-center text-gray-500">No usage data</td></tr>';
@@ -236,8 +223,8 @@ async function loadUsage() {
 
     // Update pagination
     const totalPages = Math.ceil(total / pageSize) || 1;
-    const startItem = (currentPage - 1) * pageSize + 1;
-    const endItem = Math.min(currentPage * pageSize, total);
+    const startItem = total > 0 ? start + 1 : 0;
+    const endItem = Math.min(start + pageSize, total);
     document.getElementById('pagination-info').textContent = total > 0 ? `Showing ${startItem}-${endItem} of ${total}` : 'No data';
     document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
     document.getElementById('prev-page-btn').disabled = currentPage <= 1;
@@ -250,16 +237,12 @@ function changePage(delta) {
 }
 
 async function loadChart() {
-    const { params, keyId } = getFilterParams();
-    // Remove limit/offset for chart
-    params.delete('limit');
-    params.delete('offset');
+    const { params } = getFilterParams();
 
     const data = await apiFetch('/api/usage?' + params.toString());
-    if (data === null) return;
+    if (!data) return;
     const logs = data.logs || [];
-
-    // Sort logs by time
+    if (!logs.length) return;
     const sortedLogs = logs
         .filter(l => l.created_at)
         .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
@@ -385,11 +368,6 @@ async function loadChart() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Set default dates to today
-    const today = getTodayDate();
-    document.getElementById('filter-start').value = today;
-    document.getElementById('filter-end').value = today;
-    
     // Set page size selector
     document.getElementById('page-size-select').value = String(pageSize);
     
@@ -401,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadUsage();
         loadChart();
     });
-    
+
     loadKeysDropdown();
     loadServersDropdown();
     loadUsage();
